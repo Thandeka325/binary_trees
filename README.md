@@ -52,7 +52,7 @@ Note: For tasks 0 to 23 (included), we had to deal with simple binary trees. The
 # __Print function__
 To match the examples in the tasks, we are given this [function](https://github.com/alx-tools/0x1C.c)
 
-This function is used only for visualization purposes. You don’t have to push it to your repo. It may not be used during the correction
+This function is used only for visualization purposes.
 
 # __Resources__
 
