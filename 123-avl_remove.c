@@ -1,5 +1,9 @@
 #include "binary_trees.h"
 
+avl_t *find_min(avl_t *node);
+avl_t *avl_remove(avl_t *root, int value);
+int binary_tree_balance(const binary_tree_t *tree);
+
 /**
  * find_min - Finds the node with the smallest value in a subtree.
  * @node: Pointer to the root of the subtree.
@@ -57,4 +61,21 @@ avl_t *avl_remove(avl_t *root, int value)
 		root->right = binary_tree_rotate_right(root->right);
 		return (binary_tree_rotate_left(root)); }
 	return (root);
+}
+
+/**
+ * binary_tree_balance - Measures the balance factor of a binary
+ * @tree: A pointer to the root node of the tree to measure
+ *
+ * Return: Balance factor or 0 if tree is NULL
+ */
+int binary_tree_balance(const binary_tree_t *tree)
+{
+	if (!tree)
+		return (0);
+
+	int left_height = height(tree->left);
+	int right_height = height(tree->right);
+
+	return (left_height - right_height);
 }
