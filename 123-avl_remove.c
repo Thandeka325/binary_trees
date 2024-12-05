@@ -1,81 +1,155 @@
 #include "binary_trees.h"
 
-avl_t *find_min(avl_t *node);
 avl_t *avl_remove(avl_t *root, int value);
-int binary_tree_balance(const binary_tree_t *tree);
-
-/**
- * find_min - Finds the node with the smallest value in a subtree.
- * @node: Pointer to the root of the subtree.
- *
- * Return: Pointer to the node with the smallest value.
- */
-avl_t *find_min(avl_t *node)
-{
-	while (node && node->left)
-		node = node->left;
-	return (node);
-}
+bst_t *bst_remove(bst_t *root, int value);
+int remove_type(bst_t *root);
+int successor(bst_t *node);
+void bal(avl_t **tree);
 
 /**
  * avl_remove - Removes a node from an AVL tree.
- * @root: Pointer to the root node of the tree.
- * @value: Value to remove from the tree.
  *
- * Return: Pointer to the new root of the tree.
+ * @root: A pointer to the root node of the tree for removing a node.
+ * @value: The value to remove in the tree.
+ *
+ * Return: A pointer to the new root node of the tree after
+ *         removing the desired value, and after rebalancing
  */
 avl_t *avl_remove(avl_t *root, int value)
 {
-	avl_t *temp;
+	avl_t *root_a = (avl_t *) bst_remove((bst_t *) root, value);
 
-	if (!root)
+	if (root_a == NULL)
 		return (NULL);
+	bal(&root_a);
 
-	/* Navigate the tree to find the node */
+	return (root_a);
+}
+
+/**
+ * bst_remove - Remove a node from a BST tree.
+ *
+ * @root: Root of the tree.
+ * @value: Node with this value to remove.
+ *
+ * Return: The tree changed
+ */
+bst_t *bst_remove(bst_t *root, int value)
+{
+	int type = 0;
+
+	if (root == NULL)
+		return (NULL);
 	if (value < root->n)
-		root->left = avl_remove(root->left, value);
+		bst_remove(root->left, value);
 	else if (value > root->n)
-		root->right = avl_remove(root->right, value);
+		bst_remove(root->right, value);
+	else if (value == root->n)
+	{
+		type = remove_type(root);
+		if (type != 0)
+			bst_remove(root->right, type);
+	}
 	else
-	{
-		if (!root->left || !root->right)
-		{
-			temp = root->left ? root->left : root->right;
-			free(root);
-			return (temp); }
-		temp = find_min(root->right);
-		root->n = temp->n;
-		root->right = avl_remove(root->right, temp->n); }
-	int balance = binary_tree_balance(root);
-
-	if (balance > 1)
-	{
-		if (binary_tree_balance(root->left) >= 0)
-			return (binary_tree_rotate_right(root));
-		root->left = binary_tree_rotate_left(root->left);
-		return (binary_tree_rotate_right(root)); }
-	if (balance < -1)
-	{
-		if (binary_tree_balance(root->right) <= 0)
-			return (binary_tree_rotate_left(root));
-		root->right = binary_tree_rotate_right(root->right);
-		return (binary_tree_rotate_left(root)); }
+		return (NULL);
 	return (root);
 }
 
 /**
- * binary_tree_balance - Measures the balance factor of a binary
- * @tree: A pointer to the root node of the tree to measure
+ * remove_type - Function that removes a node depending of its children.
  *
- * Return: Balance factor or 0 if tree is NULL
+ * @root: Node to remove.
+ *
+ * Return: 0 if it has no children or other value if it has
  */
-int binary_tree_balance(const binary_tree_t *tree)
+int remove_type(bst_t *root)
 {
-	if (!tree)
+	int new_value = 0;
+
+	if (!root->left && !root->right)
+	{
+		if (root->parent->right == root)
+			root->parent->right = NULL;
+		else
+			root->parent->left = NULL;
+		free(root);
 		return (0);
+	}
+	else if ((!root->left && root->right) || (!root->right && root->left))
+	{
+		if (!root->left)
+		{
+			if (root->parent->right == root)
+				root->parent->right = root->right;
+			else
+				root->parent->left = root->right;
+			root->right->parent = root->parent;
+		}
+		if (!root->right)
+		{
+			if (root->parent->right == root)
+				root->parent->right = root->left;
+			else
+				root->parent->left = root->left;
+			root->left->parent = root->parent;
+		}
+		free(root);
+		return (0);
+	}
+	else
+	{
+		new_value = successor(root->right);
+		root->n = new_value;
+		return (new_value);
+	}
+}
 
-	int left_height = height(tree->left);
-	int right_height = height(tree->right);
+/**
+ * successor - Get the next successor i mean the min node in the right subtree.
+ *
+ * @node: Tree to check.
+ *
+ * Return: The min value of this tree.
+ */
+int successor(bst_t *node)
+{
+	int left = 0;
 
-	return (left_height - right_height);
+	if (node == NULL)
+	{
+		return (0);
+	}
+	else
+	{
+		left = successor(node->left);
+		if (left == 0)
+		{
+			return (node->n);
+		}
+		return (left);
+	}
+}
+
+/**
+ * bal - Measures balance factor of a AVL.
+ *
+ * @tree: Tree to go through.
+ *
+ * Return: Balanced factor.
+ */
+void bal(avl_t **tree)
+{
+	int bval;
+
+	if (tree == NULL || *tree == NULL)
+		return;
+	if ((*tree)->left == NULL && (*tree)->right == NULL)
+		return;
+	bal(&(*tree)->left);
+	bal(&(*tree)->right);
+	bval = binary_tree_balance((const binary_tree_t *)*tree);
+	if (bval > 1)
+		*tree = binary_tree_rotate_right((binary_tree_t *)*tree);
+	else if (bval < -1)
+		*tree = binary_tree_rotate_left((binary_tree_t *)*tree);
 }
